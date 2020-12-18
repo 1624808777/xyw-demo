@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <script type="text/javascript" src="./js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="./js/vue.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+</head>
+
+
+<body>
+    <div id="app">
+        <!--左边的Div-->
+        <div id="leftDiv">
+            <span><img :src="user.image" style="width: 100px; height: 100px"></span>
+            <div id="headerDiv">
+                <p>{{user.username}}</p>
+                <p><a href="#">修改头像</a> </p>
+            </div>
+            <p>最近一次敏感操作</p>
+            <p>2020-12-15 14:23:43 账号关联微信账号</p>
+            <a href="#">查看更多</a>
+            <h3>快速通道</h3>
+            <div class="list-group">
+                <button type="button" class="list-group-item">修改密码</button>
+                <button type="button" class="list-group-item">手机:{{user.phone}} <a href="#" v-on:click="update(0)">修改</a></button>
+                <button type="button" class="list-group-item">密保邮箱：{{user.email}}<a href="#" v-on:click="update(1)">修改</a></button>
+                <button type="button" class="list-group-item">账号申诉</button>
+                <button type="button" class="list-group-item">账号注销</button>
+                <button type="button" class="list-group-item">身份认证</button>
+            </div>
+        </div>
+
+        <!--右边的Div-->
+        <div id="rightDiv">
+            <h2>安全评分</h2>
+            <div id="rightTop">
+                <div class="progress jiduDiv">
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
+                    </div>
+                </div>
+                <div id="jinduRight">
+                    <span style="color: green; font-size: 50px">90!</span>
+                    <button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-top: -30px; margin-left: 20px">重新检测 </button>
+                </div>
+            </div>
+
+            <h4>账号存在隐患，立即修复</h4>
+            <span>建议完成人脸识别，提供安全保障</span><span><button type="button" class="btn btn-default" style="margin-left: 200px">继续完成</button></span><br>
+            <span>建议开启登录保护，防止盗号风险</span><span><button type="button" class="btn btn-default" style="margin-left: 200px">立即开启</button></span><br>
+            <hr style="margin-top: 50px; color: grey">
+
+            <h2>
+                登录历史
+            </h2>
+            <p>以下为您最近的登录记录，若存在异常情况，请在核实后尽快修改密码</p>
+            <table class="table table-bordered">
+                <caption>基本的表格布局</caption>
+                <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>IP</th>
+                    <th>浏览器</th>
+                    <th>登录方式</th>
+                    <th>设备</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{userInfo.date}}</td>
+                    <td>{{userInfo.ipaddr}}</td>
+                    <td>{{userInfo.browser}}</td>
+                    <td>{{userInfo.way}}</td>
+                    <td>{{userInfo.equipment}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 模态框（Modal） -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            模态框（Modal）标题
+                        </h4>
+                    </div>
+                    <div class="modal-body" v-if="flag == 0">
+                        修改手机号&nbsp;&nbsp;&nbsp;&nbsp;<input v-model="user.phone">
+                    </div>
+                    <div v-else>
+                        修改邮箱&nbsp;&nbsp;&nbsp;&nbsp;<input v-model="user.email">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                        </button>
+                        <button type="button" class="btn btn-primary" v-on:click="mySubmit()">
+                            提交更改
+                        </button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+
+    </div>
+</body>
+<script type="text/javascript">
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            user:{},
+            userInfo:{},
+            flag:''
+        },
+        methods:{
+            queryUser:function () {
+                $.ajax({
+                    url:"/loginUser",
+                    type:"POST",
+                    data:{username : "admin", password: '123456'},
+                    success:function(result){
+                        vue.user = result;
+
+                        console.log(result);
+                    }
+                });
+            },
+            queryUserInfo:function () {
+                $.ajax({
+                    url:"queryByUid",
+                    type:"GET",
+                    data:{uid : '1'},
+                    success:function(result){
+                        console.log(result);
+                        vue.userInfo = result
+                    }
+                });
+            },
+            update:function (val) {
+                // 0是手机号 1是邮箱
+                this.flag = val
+                $('#myModal').modal('show')
+            },
+            mySubmit:function () {
+                var _this = this;
+                var flag = this.flag
+                if(flag == 0){
+                    // 修改手机
+                    $.ajax({
+                        url:"updatePhone",
+                        type:"GET",
+                        data:_this.user,
+                        success:function(result){
+                            console.log(result);
+                            vue.userInfo = result
+                        }
+                    });
+                }else{
+                    // 修改邮箱
+                    $.ajax({
+                        url:"updateEmail",
+                        type:"GET",
+                        data:_this.user,
+                        success:function(result){
+                            console.log(result);
+                            vue.userInfo = result
+                        }
+                    });
+
+                }
+                $('#myModal').modal('hide')
+                alert("修改成功！")
+            }
+        },
+        create:function () {
+            
+        },
+        mounted:function () {
+            this.queryUser();
+            this.queryUserInfo()
+        }
+    })
+
+</script>
+</html>
